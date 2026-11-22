@@ -1,4 +1,4 @@
-CVC OFFLINE VERSION 8
+CVC OFFLINE VERSION 8.1
 
 LOGIN AND USER ACCOUNTS
 First login on a device:  Username: admin   Password: admin123
@@ -22,6 +22,16 @@ Open the "CUP / CUV Tracking" tab. Only RC with a sponsor (status "មានអ�
 - Top: totals and progress by village (Sponsored RC, CUP done, CUV done, Complete, Pending).
 - Click a village to open its checklist, then tick CUP and CUV for each RC. Untick to undo.
   The date and the username that ticked are saved with each tick.
+- COULD NOT PROCESS: if an RC cannot get CUP/CUV, click "Could not process" in that row, choose a reason
+  (add a note; a note is required for "Other") and Save. Use Edit to change it or Remove status to undo.
+  Such RC are counted separately and are no longer counted as Pending. If CUP and CUV are both ticked later,
+  the mark is removed automatically.
+- Totals now show: CUP done, CUV done, Complete, Could not process, Pending.
+- ADMIN OVERVIEW (admin login only, bottom of the tab): ticks per CVC user (CUP, CUV, could not process, last
+  activity), could-not-process count per reason, and the full could-not-process RC list with reason, note,
+  date and user. Export buttons give Excel CSV.
+  Data is stored per device. To see all CVC users together, each CVC user uses Backup tracking, and the admin
+  uses Import / merge on the admin device.
 - Export summary / Export all open in Excel (CSV).
 - Ticks are saved on each device. To combine devices: Backup tracking on one, Import / merge on the other.
 - Admin only: Clear all ticks.
@@ -34,7 +44,7 @@ QUICK START
 5. Use Generate PDF. The print layout is A4 landscape with exactly 10 RC cards per page.
 
 UPDATING AN INSTALLED COPY
-This version uses a new offline cache (cvc-v8-4). Replace all files on the host, then open the
+This version uses a new offline cache (cvc-v8-5). Replace all files on the host, then open the
 app once while online so it refreshes. Existing accounts on a device are kept; an older
 single "CVC" login is carried over as a CVC user.
 
