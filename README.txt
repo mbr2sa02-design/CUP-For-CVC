@@ -2,11 +2,11 @@ CVC OFFLINE VERSION 8
 
 LOGIN AND USER ACCOUNTS
 First login on a device:  Username: admin   Password: admin123
-You are asked to choose a new password straight away.
+Login goes straight in. Change the password yourself from "Change password" in the top bar.
 
 Admin: click "Manage users" (top bar) to
 - add users (role CVC or Admin) with a starting password
-- reset a user's password (they must change it at next login)
+- reset a user's password
 - change a user's role, or delete a user
 - Export users / Import users, to copy the same accounts to other devices
 
@@ -25,7 +25,7 @@ QUICK START
 5. Use Generate PDF. The print layout is A4 landscape with exactly 10 RC cards per page.
 
 UPDATING AN INSTALLED COPY
-This version uses a new offline cache (cvc-v8-1). Replace all files on the host, then open the
+This version uses a new offline cache (cvc-v8-2). Replace all files on the host, then open the
 app once while online so it refreshes. Existing accounts on a device are kept; an older
 single "CVC" login is carried over as a CVC user.
 

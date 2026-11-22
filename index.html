@@ -88,7 +88,6 @@ $('#pdf').onclick=async()=>{let list=filtered();if(!list.length){alert('No match
 <div id="pwdModal" class="v8-modal"><div class="v8-box"><h3 id="pwdTitle">Change Password</h3><p id="pwdNote" class="v8-note"></p><input id="oldPwd" type="password" placeholder="Current password" autocomplete="current-password"><input id="newPwd" type="password" placeholder="New password (min 6 characters)" autocomplete="new-password"><input id="newPwd2" type="password" placeholder="Confirm new password" autocomplete="new-password"><div class="v8-row"><button class="primary" id="pwdSave">Save</button><button id="pwdCancel">Cancel</button></div><div id="pwdMsg" class="v8-msg"></div></div></div>
 <div id="adminModal" class="v8-modal"><div class="v8-box v8-wide"><h3>Manage Users / គ្រប់គ្រងអ្នកប្រើប្រាស់</h3>
 <div class="v8-add"><input id="nuName" placeholder="Username" autocomplete="off" autocapitalize="off"><input id="nuPass" type="text" placeholder="Password (min 6)" autocomplete="off"><select id="nuRole"><option value="cvc">CVC</option><option value="admin">Admin</option></select><button class="primary" id="nuAdd">Add user</button></div>
-<label class="v8-chk"><input type="checkbox" id="nuMust" checked> Require the user to change this password at first login</label>
 <div class="v8-tablewrap"><table class="v8-table"><thead><tr><th>Username</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody id="userRows"></tbody></table></div>
 <div class="v8-row"><button id="uExport">Export users</button><label class="v8-btnlabel">Import users<input id="uImport" type="file" accept="application/json,.json" hidden></label><button id="adminClose" style="margin-left:auto">Close</button></div>
 <p class="v8-note">Accounts are stored on this device only. To give the same accounts to other CVC devices, use <b>Export users</b> here and <b>Import users</b> on the other device (passwords are exported as hashes, never as plain text).</p><div id="adminMsg" class="v8-msg"></div></div></div>
@@ -136,7 +135,8 @@ $('#pdf').onclick=async()=>{let list=filtered();if(!list.length){alert('No match
       a=[];
       try{const old=JSON.parse(localStorage.getItem('rc_users')||'null');if(old&&typeof old==='object')Object.keys(old).forEach(u=>{if(typeof old[u]==='string'&&old[u])a.push(mk(u,old[u],'cvc',false))});localStorage.removeItem('rc_users')}catch(e){}
     }
-    if(!a.some(x=>x.role==='admin'))a.unshift(mk('admin','admin123','admin',true));
+    a.forEach(x=>x.mustChange=false);
+    if(!a.some(x=>x.role==='admin'))a.unshift(mk('admin','admin123','admin',false));
     write(a);return a;
   }
   let accounts=init();
@@ -151,7 +151,6 @@ $('#pdf').onclick=async()=>{let list=filtered();if(!list.length){alert('No match
     $$('userBar').style.display='flex';
     $$('whoami').textContent=user.username+' ('+(user.role==='admin'?'Admin':'CVC')+')';
     $$('manageBtn').style.display=user.role==='admin'?'':'none';
-    if(user.mustChange)openPwd(true);
   }
   $$('loginForm').addEventListener('submit',e=>{
     e.preventDefault();
@@ -204,13 +203,13 @@ $('#pdf').onclick=async()=>{let list=filtered();if(!list.length){alert('No match
         if(u.role==='admin'&&sel.value!=='admin'&&adminCount()<2){sel.value='admin';msg('At least one Admin account must remain.');return}
         u.role=sel.value;write(accounts);if(isMe){afterLogin(u)}renderUsers();msg('Role updated for '+u.username,true)};
       td2.appendChild(sel);
-      const td3=document.createElement('td');td3.textContent=u.mustChange?'Must change password':'Active';
+      const td3=document.createElement('td');td3.textContent='Active';
       const td4=document.createElement('td');td4.className='v8-actions';
       td4.appendChild(btn('Reset password',()=>{
         const p=prompt('New temporary password for '+u.username+' (min '+MINPW+' characters):');
         if(p===null)return;
         if(p.length<MINPW){msg('Password must be at least '+MINPW+' characters');return}
-        u.salt=rnd();u.hash=hashPw(u.salt,p);u.mustChange=!isMe;write(accounts);renderUsers();msg('Password reset for '+u.username+(isMe?'':'. They must change it at next login.'),true)}));
+        u.salt=rnd();u.hash=hashPw(u.salt,p);u.mustChange=false;write(accounts);renderUsers();msg('Password reset for '+u.username,true)}));
       if(!isMe)td4.appendChild(btn('Delete',()=>{
         if(u.role==='admin'&&adminCount()<2){msg('At least one Admin account must remain.');return}
         if(!confirm('Delete user '+u.username+'?'))return;
@@ -226,7 +225,7 @@ $('#pdf').onclick=async()=>{let list=filtered();if(!list.length){alert('No match
     if(/\s/.test(name)){msg('Username cannot contain spaces');return}
     if(find(name)){msg('That username already exists');return}
     if(pw.length<MINPW){msg('Password must be at least '+MINPW+' characters');return}
-    accounts.push(mk(name,pw,$$('nuRole').value,$$('nuMust').checked));write(accounts);
+    accounts.push(mk(name,pw,$$('nuRole').value,false));write(accounts);
     $$('nuName').value='';$$('nuPass').value='';renderUsers();msg('User '+name+' added',true);
   });
   $$('uExport').addEventListener('click',()=>{
@@ -246,7 +245,7 @@ $('#pdf').onclick=async()=>{let list=filtered();if(!list.length){alert('No match
       ok.forEach(x=>{
         const ex=find(x.username);
         if(ex&&(ex===me||ex.username===me.username))return;
-        const rec={username:x.username.trim(),role:x.role,salt:x.salt,hash:x.hash,mustChange:!!x.mustChange,created:x.created||today()};
+        const rec={username:x.username.trim(),role:x.role,salt:x.salt,hash:x.hash,mustChange:false,created:x.created||today()};
         if(ex)Object.assign(ex,rec);else accounts.push(rec);n++;
       });
       write(accounts);renderUsers();msg('Imported '+n+' user(s)',true);
