@@ -60,7 +60,7 @@ input,select,button{font:inherit;border:1px solid #cbc5bb;border-radius:10px;pad
 @media(max-width:700px){#trackView{padding:12px}#tkList small{display:none}}
 
 
-</style></head><body><div id="loginOverlay"><form id="loginForm" autocomplete="on"><div id="loginBox"><h3>RC Offline Login</h3><input id="u" placeholder="Username" autocomplete="username" autocapitalize="off"><input id="p" type="password" placeholder="Password" autocomplete="current-password"><button type="submit">Login</button><div id="loginErr"></div><p style="font-size:12px">Contact your administrator for an account.</p></div></form></div><header><div><h1>RC Offline Search & Village PDF <span class="v7-badge">Version 8</span></h1><small>ស្វែងរកតាមលេខកូដ • បែងចែកតាមភូមិ • បោះពុម្ពជា PDF</small></div><strong id="online"></strong></header><div id="userBar"><span id="whoami"></span><button id="manageBtn" class="secondary" style="display:none">Manage users</button><button id="pwdBtn">Change password</button><button id="logoutBtn">Logout</button></div><nav id="tabs"><button class="on" data-tab="search">RC Search / ស្វែងរក RC</button><button data-tab="track">CUP / CUV Tracking / តាមដាន</button></nav>
+</style></head><body><div id="loginOverlay"><form id="loginForm" autocomplete="on"><div id="loginBox"><h3>RC Offline Login</h3><input id="u" placeholder="Username" autocomplete="username" autocapitalize="off"><input id="p" type="password" placeholder="Password" autocomplete="current-password"><button type="submit">Login</button><div id="loginErr"></div><p style="font-size:12px">Contact your administrator for an account.</p><p style="font-size:11px;color:#8a948d;margin:6px 0 0">Version 8 &middot; build 22 Nov 2026 (c)</p></div></form></div><header><div><h1>RC Offline Search & Village PDF <span class="v7-badge">Version 8</span></h1><small>ស្វែងរកតាមលេខកូដ • បែងចែកតាមភូមិ • បោះពុម្ពជា PDF</small></div><strong id="online"></strong></header><div id="userBar"><span id="whoami"></span><button id="manageBtn" class="secondary" style="display:none">Manage users</button><button id="pwdBtn">Change password</button><button id="logoutBtn">Logout</button></div><nav id="tabs"><button class="on" data-tab="search">RC Search / ស្វែងរក RC</button><button data-tab="track">CUP / CUV Tracking / តាមដាន</button></nav>
 <main id="searchView"><section class="panel"><div class="tools"><input id="search" autocomplete="off" placeholder="Search RC ID or name / ស្វែងរកលេខកូដ ឬ ឈ្មោះ"><select id="village"><option value="">All villages / ភូមិទាំងអស់</option></select><button class="primary" id="pdf">Generate PDF</button></div>
 <div class="actions"><button class="secondary" id="cache">Save visible photos offline</button><label class="secondary" style="display:inline-flex;align-items:center;cursor:pointer">Add local photos<input id="files" type="file" accept="image/*" multiple hidden></label><button id="clear">Clear offline photos</button><span id="progress"></span></div>
 <p class="hint">For offline use: while connected, choose one village and click “Save visible photos offline”. You may also add local photos whose filenames contain the RC ID, such as CAM-199774-0305.jpg.</p><div class="privacy">Child records and photos are sensitive. Keep this HTML file only on authorized devices and do not share it publicly.</div></section><div class="stats" id="stats"></div><section class="cards" id="cards"></section></main><section id="trackView">
@@ -121,6 +121,9 @@ $('#pdf').onclick=async()=>{let list=filtered();if(!list.length){alert('No match
 (function(){
   'use strict';
   const KEY='rc_accounts_v8', SES='rc_user', LOG='rc_logged_in', MINPW=6;
+
+  const S=(function(){const mem={};let ok=true;try{localStorage.setItem('__t','1');localStorage.removeItem('__t')}catch(e){ok=false}
+    return{ok:ok,get:k=>{try{return ok?localStorage.getItem(k):(k in mem?mem[k]:null)}catch(e){return null}},set:(k,v)=>{try{if(ok)localStorage.setItem(k,v);else mem[k]=String(v)}catch(e){mem[k]=String(v)}},remove:k=>{try{if(ok)localStorage.removeItem(k);else delete mem[k]}catch(e){delete mem[k]}}}})();
   const $$=id=>document.getElementById(id);
 
   /* ---------- SHA-256 (pure JS so it works on file:// and http) ---------- */
@@ -153,13 +156,13 @@ $('#pdf').onclick=async()=>{let list=filtered();if(!list.length){alert('No match
   function rnd(){const a=new Uint8Array(8);if(window.crypto&&crypto.getRandomValues)crypto.getRandomValues(a);else for(let i=0;i<8;i++)a[i]=Math.random()*256|0;return[...a].map(b=>b.toString(16).padStart(2,'0')).join('')}
   const hashPw=(salt,pw)=>sha256(salt+':'+pw);
   function mk(username,pw,role,must){const salt=rnd();return{username,role,salt,hash:hashPw(salt,pw),mustChange:!!must,created:today()}}
-  function read(){try{const a=JSON.parse(localStorage.getItem(KEY));if(Array.isArray(a))return a}catch(e){}return null}
-  function write(a){localStorage.setItem(KEY,JSON.stringify(a))}
+  function read(){try{const a=JSON.parse(S.get(KEY));if(Array.isArray(a))return a}catch(e){}return null}
+  function write(a){S.set(KEY,JSON.stringify(a))}
   function init(){
     let a=read();
     if(!a){
       a=[];
-      try{const old=JSON.parse(localStorage.getItem('rc_users')||'null');if(old&&typeof old==='object')Object.keys(old).forEach(u=>{if(typeof old[u]==='string'&&old[u])a.push(mk(u,old[u],'cvc',false))});localStorage.removeItem('rc_users')}catch(e){}
+      try{const old=JSON.parse(S.get('rc_users')||'null');if(old&&typeof old==='object')Object.keys(old).forEach(u=>{if(typeof old[u]==='string'&&old[u])a.push(mk(u,old[u],'cvc',false))});S.remove('rc_users')}catch(e){}
     }
     a.forEach(x=>x.mustChange=false);
     if(!a.some(x=>x.role==='admin'))a.unshift(mk('admin','admin123','admin',false));
@@ -178,19 +181,20 @@ $('#pdf').onclick=async()=>{let list=filtered();if(!list.length){alert('No match
     $$('whoami').textContent=user.username+' ('+(user.role==='admin'?'Admin':'CVC')+')';
     $$('manageBtn').style.display=user.role==='admin'?'':'none';
   }
+  if(!S.ok)$$('loginErr').textContent='Browser storage is blocked here. Open this link in Chrome or Safari (not inside another app) so accounts can be saved.';
   $$('loginForm').addEventListener('submit',e=>{
     e.preventDefault();
     const u=find($$('u').value),p=$$('p').value;
-    if(u&&u.hash===hashPw(u.salt,p)){
-      try{localStorage.setItem(LOG,'1');localStorage.setItem(SES,u.username)}catch(_){}
+    if(u&&(u.hash===hashPw(u.salt,p)||(p!==p.trim()&&u.hash===hashPw(u.salt,p.trim())))){
+      try{S.set(LOG,'1');S.set(SES,u.username)}catch(_){}
       $$('p').value='';$$('loginErr').textContent='';afterLogin(u);
     }else $$('loginErr').textContent='Invalid username or password';
   });
-  $$('logoutBtn').addEventListener('click',()=>{localStorage.removeItem(LOG);localStorage.removeItem(SES);location.reload()});
+  $$('logoutBtn').addEventListener('click',()=>{S.remove(LOG);S.remove(SES);location.reload()});
   (function resume(){
-    if(localStorage.getItem(LOG)!=='1')return;
-    const u=find(localStorage.getItem(SES));
-    if(u)afterLogin(u);else{localStorage.removeItem(LOG);localStorage.removeItem(SES)}
+    if(S.get(LOG)!=='1')return;
+    const u=find(S.get(SES));
+    if(u)afterLogin(u);else{S.remove(LOG);S.remove(SES)}
   })();
 
   /* ---------- change own password ---------- */
@@ -282,7 +286,7 @@ $('#pdf').onclick=async()=>{let list=filtered();if(!list.length){alert('No match
   const modal=document.getElementById('photoModal'), full=document.getElementById('photoFull');
   document.addEventListener('click',e=>{if(e.target.matches('.photo img')){full.src=e.target.src;modal.classList.add('open')}});
   document.getElementById('photoClose').onclick=()=>modal.classList.remove('open'); modal.onclick=e=>{if(e.target===modal)modal.classList.remove('open')};
-  if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+  if('serviceWorker' in navigator && location.protocol.startsWith('http')){if(navigator.serviceWorker.controller)navigator.serviceWorker.addEventListener('controllerchange',()=>{if(!window.__rl){window.__rl=1;location.reload()}});navigator.serviceWorker.register('./service-worker.js').catch(()=>{})}
 })();
 </script>
 <script>

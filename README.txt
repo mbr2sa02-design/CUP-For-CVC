@@ -34,7 +34,7 @@ QUICK START
 5. Use Generate PDF. The print layout is A4 landscape with exactly 10 RC cards per page.
 
 UPDATING AN INSTALLED COPY
-This version uses a new offline cache (cvc-v8-3). Replace all files on the host, then open the
+This version uses a new offline cache (cvc-v8-4). Replace all files on the host, then open the
 app once while online so it refreshes. Existing accounts on a device are kept; an older
 single "CVC" login is carried over as a CVC user.
 
